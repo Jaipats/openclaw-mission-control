@@ -69,7 +69,7 @@ A modern, real-time monitoring and management dashboard for OpenClaw multi-agent
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd ClawMissionControl
+   cd openclaw-mission-control
    ```
 
 2. **Install dependencies**

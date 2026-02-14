@@ -24,16 +24,50 @@ const traceManager = new TraceManager();
 
 // Check OpenClaw connection on startup
 let openClawConnected = false;
-openClawClient.healthCheck().then(connected => {
-  openClawConnected = connected;
-  if (connected) {
-    console.log(`✅ Connected to OpenClaw Gateway at ${OPENCLAW_URL}`);
-  } else {
-    console.warn(`⚠️  Could not connect to OpenClaw Gateway at ${OPENCLAW_URL}`);
+let configWatcher = null;
+
+// Initialize OpenClaw connection
+(async () => {
+  try {
+    console.log(`🔍 Checking OpenClaw Gateway at ${OPENCLAW_URL}...`);
+    openClawConnected = await openClawClient.healthCheck();
+    
+    if (openClawConnected) {
+      console.log(`✅ Connected to OpenClaw Gateway at ${OPENCLAW_URL}`);
+      
+      // Try to load initial configuration
+      try {
+        const agents = await openClawClient.getAgents();
+        console.log(`📦 Loaded ${agents.length} agents from OpenClaw configuration`);
+        
+        // Start watching for configuration changes
+        configWatcher = openClawClient.startConfigWatch(async (config) => {
+          console.log('📡 OpenClaw configuration changed, syncing agents...');
+          await agentManager.syncFromOpenClaw();
+          const agents = await agentManager.getAllAgents();
+          
+          broadcast({
+            type: 'AGENTS_SYNCED',
+            data: { agents },
+          });
+        }, 10000); // Check every 10 seconds
+        
+        console.log(`👀 Watching OpenClaw configuration for changes`);
+      } catch (error) {
+        console.error(`❌ Failed to load OpenClaw configuration:`, error.message);
+        console.warn('   Will continue in standalone mode');
+        openClawConnected = false;
+      }
+    } else {
+      console.warn(`⚠️  Could not connect to OpenClaw Gateway at ${OPENCLAW_URL}`);
+      console.warn('   Mission Control will work in standalone mode.');
+      console.warn('   Update OPENCLAW_GATEWAY_URL in .env to connect.');
+    }
+  } catch (error) {
+    console.error(`❌ OpenClaw connection error:`, error.message);
     console.warn('   Mission Control will work in standalone mode.');
-    console.warn('   Update OPENCLAW_GATEWAY_URL in .env to connect.');
   }
-});
+})();
 
 // WebSocket connection handling
 wss.on('connection', async (ws) => {
@@ -66,21 +100,6 @@ wss.on('connection', async (ws) => {
     console.error('WebSocket error:', error);
   });
 });
-
-// Watch for OpenClaw configuration changes
-let configWatcher = null;
-if (openClawConnected) {
-  configWatcher = openClawClient.startConfigWatch(async (config) => {
-    console.log('📡 OpenClaw configuration changed, syncing agents...');
-    await agentManager.syncFromOpenClaw();
-    const agents = await agentManager.getAllAgents();
-    
-    broadcast({
-      type: 'AGENTS_SYNCED',
-      data: { agents },
-    });
-  }, 10000); // Check every 10 seconds
-}
 
 // Broadcast to all connected clients
 function broadcast(message) {

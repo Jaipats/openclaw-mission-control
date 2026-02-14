@@ -19,9 +19,24 @@ export class OpenClawClient {
       const response = await axios.post(`${this.gatewayUrl}/rpc`, {
         method: 'config.get',
         params: {},
+      }, {
+        timeout: 5000,
       });
-      return response.data.result;
+      
+      // Handle different response structures
+      if (response.data && response.data.result !== undefined) {
+        return response.data.result;
+      } else if (response.data) {
+        return response.data;
+      }
+      
+      throw new Error('Invalid response structure from OpenClaw');
     } catch (error) {
+      if (error.code === 'ECONNREFUSED') {
+        throw new Error('OpenClaw Gateway not running');
+      } else if (error.code === 'ETIMEDOUT') {
+        throw new Error('OpenClaw Gateway connection timeout');
+      }
       console.error('Failed to fetch OpenClaw config:', error.message);
       throw new Error(`OpenClaw connection failed: ${error.message}`);
     }
@@ -83,13 +98,24 @@ export class OpenClawClient {
     try {
       const config = await this.getConfig();
       
+      console.log('📋 OpenClaw config structure:', JSON.stringify(config, null, 2).substring(0, 500));
+      
       // OpenClaw agents configuration structure
-      const agents = config?.agents || [];
+      // Try different possible locations for agents
+      let agents = config?.agents || config?.agent?.agents || [];
+      
+      // If agents is not an array, return empty array
+      if (!Array.isArray(agents)) {
+        console.warn('⚠️  No agents array found in OpenClaw config, starting with empty list');
+        return [];
+      }
+      
+      console.log(`✅ Found ${agents.length} agents in OpenClaw configuration`);
       
       // Transform to Mission Control format with status tracking
       return agents.map(agent => ({
-        id: agent.id || agent.name.toLowerCase().replace(/\s+/g, '-'),
-        name: agent.name,
+        id: agent.id || agent.name?.toLowerCase().replace(/\s+/g, '-') || `agent-${Date.now()}`,
+        name: agent.name || 'Unnamed Agent',
         type: agent.type || 'worker',
         parentId: agent.parentId || null,
         children: agent.children || [],
@@ -102,7 +128,8 @@ export class OpenClawClient {
         metadata: agent.metadata || {},
       }));
     } catch (error) {
-      console.warn('Could not fetch agents from OpenClaw, using empty list:', error.message);
+      console.warn('Could not fetch agents from OpenClaw:', error.message);
+      console.warn('Starting with empty agent list. You can create agents in Mission Control.');
       return [];
     }
   }
@@ -246,13 +273,30 @@ export class OpenClawClient {
    */
   async healthCheck() {
     try {
-      const response = await axios.get(`${this.gatewayUrl}/health`, {
-        timeout: 5000,
+      // Try the RPC endpoint first
+      const response = await axios.post(`${this.gatewayUrl}/rpc`, {
+        method: 'config.get',
+        params: {},
+      }, {
+        timeout: 3000,
       });
-      return response.status === 200;
+      
+      if (response.status === 200) {
+        return true;
+      }
     } catch (error) {
-      return false;
+      // Try alternative health check endpoints
+      try {
+        const healthResponse = await axios.get(`${this.gatewayUrl}/health`, {
+          timeout: 3000,
+        });
+        return healthResponse.status === 200;
+      } catch (healthError) {
+        console.error('Health check failed:', error.message);
+      }
     }
+    
+    return false;
   }
 
   /**

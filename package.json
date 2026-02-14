@@ -10,7 +10,8 @@
     "client": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "seed": "node server/seedDemo.js"
+    "seed": "node server/seedDemo.js",
+    "diagnose": "node server/diagnose.js"
   },
   "keywords": [
     "openclaw",
