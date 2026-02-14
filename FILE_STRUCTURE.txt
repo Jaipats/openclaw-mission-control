@@ -1,0 +1,52 @@
+ClawMissionControl/
+├── 📄 Documentation
+│   ├── README.md                    # Main documentation (11KB)
+│   ├── GETTING_STARTED.md          # Setup guide (6.2KB)
+│   ├── ARCHITECTURE.md             # Technical details (12KB)
+│   ├── QUICK_REFERENCE.md          # Command reference (7.4KB)
+│   └── PROJECT_SUMMARY.md          # This project overview
+│
+├── 🔧 Configuration
+│   ├── package.json                # Dependencies & scripts
+│   ├── vite.config.js             # Vite configuration
+│   ├── .env.example               # Environment template
+│   ├── .gitignore                 # Git ignore rules
+│   ├── setup.sh                   # Setup automation script
+│   └── index.html                 # HTML entry point
+│
+├── 🖥️ Backend (server/)
+│   ├── index.js                   # Main server (Express + WebSocket)
+│   ├── agentManager.js            # Agent state management
+│   ├── traceManager.js            # Trace tracking & analytics
+│   └── seedDemo.js                # Demo data generator
+│
+└── 🎨 Frontend (src/)
+    ├── main.jsx                   # Application entry point
+    ├── App.jsx                    # Main app component
+    ├── App.css                    # App-level styles
+    ├── index.css                  # Global styles & theme
+    │
+    ├── 🧩 components/
+    │   ├── Header.jsx             # Top navigation bar
+    │   ├── Header.css
+    │   ├── AgentTree.jsx          # Agent hierarchy visualization
+    │   ├── AgentTree.css
+    │   ├── TracePanel.jsx         # Request trace viewer
+    │   ├── TracePanel.css
+    │   ├── StatsPanel.jsx         # Statistics dashboard
+    │   ├── StatsPanel.css
+    │   ├── CreateAgentModal.jsx   # Agent creation dialog
+    │   └── CreateAgentModal.css
+    │
+    └── 🪝 hooks/
+        ├── useWebSocket.js        # WebSocket connection management
+        ├── useAgents.js           # Agent state & API calls
+        └── useTraces.js           # Trace state & API calls
+
+📊 Project Stats:
+├── Total Files: 30+
+├── Source Files: 21
+├── Documentation: 5 guides
+├── Components: 6 React components
+├── Custom Hooks: 3
+└── Lines of Code: ~2,500+
