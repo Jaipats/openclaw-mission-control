@@ -6,6 +6,12 @@ A modern, real-time monitoring and management dashboard for OpenClaw multi-agent
 ![Node](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
+## 📸 Preview
+
+![OpenClaw Mission Control Dashboard](./assets/mission-control-ui.png)
+
+*Real-time multi-agent monitoring with status indicators, hierarchical visualization, and comprehensive trace tracking*
+
 ## 🎯 Features
 
 ### 1. **Agent Hierarchy Visualization**
