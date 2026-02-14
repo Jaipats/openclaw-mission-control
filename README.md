@@ -2,9 +2,12 @@
 
 A modern, real-time monitoring and management dashboard for OpenClaw multi-agent systems. Mission Control provides a comprehensive view of your agent hierarchy, request traces, and system performance metrics.
 
+**🔗 Integrates directly with OpenClaw's `~/.openclaw/openclaw.json` configuration** - no duplicate configs, no conflicts!
+
 ![OpenClaw Mission Control](https://img.shields.io/badge/status-active-success)
 ![Node](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
+![OpenClaw](https://img.shields.io/badge/OpenClaw-Compatible-blue)
 
 ## 📸 Preview
 
@@ -38,7 +41,13 @@ A modern, real-time monitoring and management dashboard for OpenClaw multi-agent
 - **Performance Stats**: Average request duration
 - **Real-time Updates**: All stats update live as events occur
 
-### 5. **WebSocket Integration**
+### 5. **OpenClaw Configuration Integration**
+- **Single Source of Truth**: Reads from and writes to `~/.openclaw/openclaw.json`
+- **No Duplication**: Uses OpenClaw's native agent configuration
+- **Auto-sync**: Detects configuration changes made via OpenClaw CLI or Control UI
+- **Standards Compliant**: Follows OpenClaw RPC API and configuration schema
+
+### 6. **WebSocket Integration**
 - **Real-time Communication**: Instant updates for all system changes
 - **Auto-reconnect**: Automatic reconnection with exponential backoff
 - **Broadcast Events**: All connected clients receive updates simultaneously
@@ -49,7 +58,11 @@ A modern, real-time monitoring and management dashboard for OpenClaw multi-agent
 
 - Node.js >= 16.0.0
 - npm or yarn
-- OpenClaw Gateway (running instance)
+- **OpenClaw Gateway** (install from https://openclaw.ai or use `openclaw` CLI)
+
+> **Note**: Mission Control works in two modes:
+> - **Connected Mode** (recommended): Syncs with OpenClaw Gateway at `http://localhost:18789`
+> - **Standalone Mode** (fallback): Works without OpenClaw for development/testing
 
 ### Installation
 
@@ -71,9 +84,25 @@ A modern, real-time monitoring and management dashboard for OpenClaw multi-agent
    
    Edit `.env` to configure your OpenClaw Gateway URL:
    ```env
-   OPENCLAW_GATEWAY_URL=http://localhost:8080
+   # OpenClaw Gateway (default Control UI port)
+   OPENCLAW_GATEWAY_URL=http://localhost:18789
+   
+   # Mission Control server port
    SERVER_PORT=4000
-   WS_UPDATE_INTERVAL=100
+   ```
+   
+   > **Important**: OpenClaw Gateway typically runs on port **18789** (not 8080)
+
+4. **Ensure OpenClaw is running** (optional for standalone mode)
+   ```bash
+   # Check OpenClaw status
+   openclaw status
+   
+   # Start OpenClaw if needed
+   openclaw start
+   
+   # Verify Control UI is accessible
+   curl http://localhost:18789/health
    ```
 
 4. **Start the application**
@@ -85,11 +114,68 @@ A modern, real-time monitoring and management dashboard for OpenClaw multi-agent
    - Backend server on `http://localhost:4000`
    - Frontend dev server on `http://localhost:3000`
    - WebSocket server on `ws://localhost:4000`
+   - Auto-sync with OpenClaw configuration (if connected)
 
 5. **Open your browser**
    ```
    http://localhost:3000
    ```
+   
+   If connected to OpenClaw, Mission Control will load existing agents from `~/.openclaw/openclaw.json`
+
+## 🔗 OpenClaw Integration
+
+Mission Control integrates seamlessly with OpenClaw's configuration system:
+
+### How It Works
+
+1. **Configuration Sync**: Reads agents from `~/.openclaw/openclaw.json` via OpenClaw Gateway RPC API
+2. **Automatic Updates**: Detects changes made through OpenClaw CLI or Control UI
+3. **Unified Management**: Changes in Mission Control are written back to OpenClaw configuration
+4. **No Conflicts**: Single source of truth prevents duplication and synchronization issues
+
+### Integration Modes
+
+**✅ Connected Mode** (Recommended)
+- Connects to OpenClaw Gateway at `http://localhost:18789`
+- Reads/writes to `~/.openclaw/openclaw.json`
+- Agents persist across restarts
+- Real OpenClaw request routing
+
+**⚠️ Standalone Mode** (Fallback)
+- Works without OpenClaw for development
+- Agents stored in memory only
+- Requests are simulated
+- Data lost on restart
+
+### Configuration File
+
+Mission Control respects OpenClaw's configuration structure:
+
+```json5
+// ~/.openclaw/openclaw.json
+{
+  "agent": {
+    "model": "anthropic/claude-opus-4-5"
+  },
+  "agents": [
+    {
+      "id": "master-orchestrator",
+      "name": "Master Orchestrator",
+      "type": "master",
+      "parentId": null,
+      "children": ["data-supervisor"],
+      "model": "anthropic/claude-opus-4-5",
+      "capabilities": ["coordination"],
+      "config": {},
+      "metadata": {}
+    }
+    // ... more agents
+  ]
+}
+```
+
+**📚 For detailed integration guide, see [OPENCLAW_INTEGRATION.md](./OPENCLAW_INTEGRATION.md)**
 
 ## 📖 Usage Guide
 
